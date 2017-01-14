@@ -8,6 +8,7 @@ Very helpful project for those who are new to Angular, as I started this project
 I am currently learning Angular 2.0 and will migrate linkster to 2.0 in a seperate branch so that developers can get 
 good hands-on on both the Angular versions.
 
+Live link : http://webious.in/#/linkster
 
 
 
