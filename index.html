@@ -1,0 +1,215 @@
+<!-- Version: 0.0.1  
+Added google analytics
+Dat: 03/04/2016 -->
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Linkster</title>
+	<script type="text/javascript" src="jquery-2.2.2.min.js"></script>
+	<script type="text/javascript" src="bootstrap\js\bootstrap.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="bootstrap\css\bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="style.css">
+
+	
+	<meta name="google-site-verification" content="n-hbIK2FgsnKVBvDzDBD0sfceTuzm2ZyD7u_PYiedSI" />
+</head>
+<body data-spy="scroll" data-target=".navbar" ng-app="linksterApp">
+
+<nav class="navbar navbar-default navbar-fixed-top">
+	<div class="container">
+	<div class="navbar-header">
+		<button class="navbar-toggle" data-toggle="collapse" data-target="#myNav">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand page-scroll" href="#home">Linkster</a>
+	</div> 
+	<div class="collapse navbar-collapse" id="myNav">
+	<ul class="nav navbar-nav">
+		<li><a href="#content" class="page-scroll">Content</a></li>
+		<li><a href="#about" class="page-scroll">About Us</a></li>
+	</ul>
+	</div>	
+	</div>
+</nav>
+
+<ng-view></ng-view>
+<script type="text/ng-template" id="defaultTemplate.html"> 
+<div id="home">
+	<div class="container">
+	<h2>Linkster</h2>
+	<h3>easy way to share notes among co-workers and friends.</h3>
+
+	<br><br>
+
+	<h4>Create a link for your content & share - <a href="#content" class="page-scroll">Start</a></h4>
+</div>
+</div>
+<div id="content" ng-controller="contentController">
+<div class="container">
+<div class="row">
+	<div class="col-md-8">
+	
+	 <div class="form-group">
+      <textarea class="form-control" rows="15" ng-model="userContent" placeholder="Please enter your content here."></textarea>
+      <!--
+      <p>{{cleanInput(userContent)}}</p>
+      -->
+      <p>{{json}}</p>
+      <p>{{tester}}</p>
+    </div>
+	</div>
+	<div class="col-md-4">
+		<div class="form-group">
+		<button type="button" class="btn btn-info" ng-click="save()">Save</button>
+		<button type="button" class="btn btn-danger" ng-click="reset()">Reset</button>
+		<h3>Create a Link for this content.</h3>
+		<input type="text" class="form-control" id="linkSegment" ng-model="linkSeg"/>
+		<p>Your Link will be : {{link = "http://webious.in/linkster/#/"+ cleanInput(linkSeg) | lowercase}}</p>
+		<p>{{msg}}</p>
+		</div>
+	</div>
+</div>
+</div>
+</div>
+<div id="about">
+<div class="container">
+	<!-- About us page -->
+	<pre>Linkster is a website created by passionate web developers, and in a free time
+	How ever linkster might not be completely up and ready always. It is under construction and you will see many more features coming to this web-app.
+
+			Do visit back & support us to create a free web-app
+
+	We really appreciate any feed back from you, if you want to work with us to make linkster better,
+	Do contact us.</pre>
+</div>
+</div>
+
+</script>
+</body>
+
+<script type="text/javascript" src="angular.min.js"></script>
+<script type="text/javascript" src="angular-route.min.js"></script>
+<script type="text/javascript" src="angular-sanitize.min.js"></script>
+<script type="text/javascript" src="jquery.easing.min.js"></script>
+<script type="text/javascript" src="script.js"></script>
+<script type="text/ng-template" id="notesTemplate.html">
+	
+	<div class="col-md-12 " style="padding-top: 150px;">
+	<div class="form-group">
+	<form name="updateForm">
+	<button type="button" class="btn btn-default" id="dbSave" ng-click="update()" 
+	ng-show="updateForm.fetchedContent.$touched">Update Content</button></br></br>
+	<textarea name="fetchedContent" class="form-control" rows="15" ng-model="dbContent" placeholder="Unable to fetch content!!!"></textarea>
+	</form>
+	</div>
+	</div>
+	<p>{{msg}}</p>
+</script> 
+<script type="text/javascript">
+	var app = angular.module("linksterApp",['ngRoute','ngSanitize']);
+	app.controller("contentController",function($scope,$location,$sanitize,$http,shareService){
+		var content = $scope.userContent;
+		$scope.cleanInput = function(inputString){
+			return $sanitize(inputString);
+		};
+		$scope.save = function(){
+			var notAllowed = ['admin','webious','linkster','home','content','about','aboutus','contact']; 
+			$scope.msg = "";
+			if(!$scope.linkSeg){
+				$scope.msg	= "Please enter a link for your content";
+			}
+			if(!$scope.userContent){
+				$scope.msg += " ,Please enter some content.";
+			}
+			for(var i=0; i< notAllowed.length; i++){
+				if(notAllowed[i] == $scope.linkSeg){
+					$scope.msg = "Sorry, the link you entered is not allowed!!! Please try another one.";
+				}
+			}
+			//Check if content is empty.
+			if($scope.msg == ""){
+				$http({	method: 'POST',
+						url: "backend.php",
+						data: $.param({'mode':'save',
+										'lnk':$scope.linkSeg,
+										'content':$scope.userContent}),
+						
+						headers: {'Content-Type': 'application/x-www-form-urlencoded'}	
+						}).then(
+								function($response){ 
+
+									$location.url("/"+$scope.linkSeg); },
+								function($response){$scope.msg = "Couldn't save,something went wrong.."}
+						);
+			}
+			
+		};
+		$scope.reset = function(){
+			$scope.linkSeg = "";
+			$scope.userContent = "";
+			$scope.msg = "";
+		};
+		
+		
+	});
+	app.
+		config(['$routeProvider',function($routeProvider){
+		$routeProvider.
+		when('/home',{
+			controller: 'contentController',
+			templateUrl: 'defaultTemplate.html'
+		}).
+		when('/',{controller: 'contentController',
+						templateUrl: 'defaultTemplate.html'
+		}).
+		when('/about',{controller: 'contentController',
+						templateUrl: 'defaultTemplate.html'}).
+		when('/contact',{controller: 'contentController',
+						templateUrl: 'defaultTemplate.html'}).
+		when('/content',{controller: 'contentController',
+						templateUrl: 'defaultTemplate.html'
+						}).
+		otherwise({controller: 'notesController',
+					templateUrl: 'notesTemplate.html'
+					});
+	}]);
+	
+	app.controller("notesController",function($scope,$location,$http,shareService){
+		
+		$scope.lnk = window.location.href.substr(window.location.href.lastIndexOf('/')+1);
+		//var param = JSON.stringify({'lnk':$scope.lnk}); 
+		
+		$http({method: 'POST',
+			url:"backend.php",
+			data: $.param({'mode':'retrieve','lnk': $scope.lnk}),
+			headers: {'Content-Type': 'application/x-www-form-urlencoded'}})
+		.then(function($response){$scope.dbContent = ($response.data[0].content )}
+			, function($response){ $scope.msg = "Please check the link... " });
+		 		
+		$scope.update = function(){
+			$http({
+				method: 'POST',
+				url: 'backend.php',
+				data: $.param({'mode':'update',
+						'lnk':$scope.lnk,
+						'content':$scope.dbContent
+						}),
+				headers: {'Content-Type':'application/x-www-form-urlencoded'}
+			}).then(
+				function($response){ $scope.msg = $response.data; },
+				function($response){ $scope.msg = "Couldn't update the content, Something went wrong... "}
+
+			);
+
+		}
+		});
+
+	app.service("shareService",function(){
+		var _shareVariable = {};
+		this.shareVariable = _shareVariable;
+	});
+</script>
+<?php include_once("analyticstracking.php") ?>
+</html>
